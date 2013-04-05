@@ -69,7 +69,12 @@
  * Returns the the current 512 raw signal samples [-32768, 32767]. 
  * 
  * 
+ ****** Modified by Sean Montgomery (www.ProduceConsumeRobot.com) 2013/04 *******
+ * https://github.com/produceconsumerobot/
+ * - New Feature: Added a method setRawArraySize(int size) to change amount of raw data 
+ * that is accumulated before triggering a rawEvent. Default size is 512.
  */ 
+
 package neurosky;
 
 import java.io.BufferedReader;
@@ -106,12 +111,11 @@ public class ThinkGearSocket  implements Runnable{
   public String appKey="";
   private Thread t;
   
-  private int raw[] = new int[512];
+  private int rawArraySize = 512;
+  private int raw[] = new int[rawArraySize];
   private int index = 0;
   
-	public final static String VERSION = "1.0";
-  
-  
+  public final static String VERSION = "1.01";
   
   private boolean running = true;
 	  public ThinkGearSocket(PApplet _parent, String _appName,String _appKey){
@@ -193,6 +197,18 @@ public class ThinkGearSocket  implements Runnable{
 
 	}
 	
+	/**
+	 * Sets the size of the array that is accumulated before triggering a rawEvent.
+	 * 
+	 * @param int size - Must be greater than 0
+	 * @return void
+	 */  
+	  public void setRawArraySize (int size) {
+		  if (size > 0) {
+			  raw = new int[size]; 		// resize raw array
+			  rawArraySize = size;		// set rawArraySize
+		  }
+	  }
 	
 	  public boolean isRunning(){
 		  return running;
@@ -465,9 +481,10 @@ public class ThinkGearSocket  implements Runnable{
 				    	 int rawValue =  (Integer) data.get("rawEeg");
 				          raw[index] = rawValue;
 				          index++;
-				          if (index == 512) {
+				          
+				          if (index == rawArraySize) {
 				            index = 0;
-				            int rawCopy[] = new int[512];
+				            int rawCopy[] = new int[rawArraySize];
 				            parent.arrayCopy(raw, rawCopy);
 				            triggerRawEvent(rawCopy);
 				          }
